@@ -1,170 +1,165 @@
-"use client";
+'use client';
+import { useState } from 'react';
+import axios from 'axios';
 
-import { useState } from "react";
-import Link from "next/link";
+interface HRFormValues {
+  fullName: string;
+  email: string;
+  password: string;
+  companyName: string;
+  employeeId: string;
+  department: string;
+}
 
-export default function RegisterPage() {
-  const [role, setRole] = useState("user");
+export default function Register() {
+  const [formData, setFormData] = useState<HRFormValues>({
+    fullName: '',
+    email: '',
+    password: '',
+    companyName: '',
+    employeeId: '',
+    department: ''
+  });
+  const [errors, setErrors] = useState<Partial<HRFormValues>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validateForm = () => {
+    const newErrors: Partial<HRFormValues> = {};
+    if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
+    if (!/^\S+@\S+\.\S+$/.test(formData.email)) newErrors.email = 'Invalid email address';
+    if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
+    if (!formData.companyName.trim()) newErrors.companyName = 'Company name is required';
+    if (!/^\d{3,}-[A-Z]{3}$/.test(formData.employeeId)) newErrors.employeeId = 'Invalid employee ID format';
+    if (!formData.department.trim()) newErrors.department = 'Department is required';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+    try {
+      await axios.post('/api/register/hr', formData);
+      // alert('Registration successful!');
+    } catch (error) {
+      alert('Registration failed');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-700 via-indigo-700 to-blue-600">
-      <div className="w-full max-w-md bg-white/20 backdrop-blur-lg rounded-2xl shadow-xl p-8 border border-white/30">
-        <h1 className="text-3xl font-bold text-center text-white mb-6">
-          Create an Account
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-lg shadow-md p-6">
+        <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+          HR Registration
         </h1>
-
-        {/* Role Selector */}
-        <div className="mb-6">
-          <label className="block text-white mb-2">Register as</label>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="w-full px-4 py-2 bg-white/10 text-white border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-          >
-            <option value="user" className="text-black">User</option>
-            <option value="employee" className="text-black">Employee</option>
-            <option value="admin" className="text-black">Admin</option>
-            <option value="hr" className="text-black">HR</option>
-          </select>
-        </div>
-
-        <form className="space-y-5">
-          {/* Full Name */}
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-white mb-2">Full Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Company Name
+            </label>
             <input
-              type="text"
-              className="w-full px-4 py-2 bg-white/10 text-white border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-              placeholder="Your name"
+              className={`w-full px-3 py-2 border rounded-lg text-black ${errors.companyName ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              value={formData.companyName}
+              onChange={(e) => setFormData({...formData, companyName: e.target.value})}
+              placeholder="Acme Corp"
             />
+            {errors.companyName && (
+              <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>
+            )}
           </div>
 
-          {/* Email */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Employee ID
+              </label>
+              <input
+                className={`w-full px-3 py-2 border rounded-lg text-black ${errors.employeeId ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                value={formData.employeeId}
+                onChange={(e) => setFormData({...formData, employeeId: e.target.value})}
+                placeholder="123-ABC"
+              />
+              {errors.employeeId && (
+                <p className="text-red-500 text-sm mt-1">{errors.employeeId}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Department
+              </label>
+              <input
+                className={`w-full px-3 py-2 border rounded-lg text-black ${errors.department ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                value={formData.department}
+                onChange={(e) => setFormData({...formData, department: e.target.value})}
+                placeholder="Engineering"
+              />
+              {errors.department && (
+                <p className="text-red-500 text-sm mt-1">{errors.department}</p>
+              )}
+            </div>
+          </div>
+
           <div>
-            <label className="block text-white mb-2">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Full Name
+            </label>
+            <input
+              className={`w-full px-3 py-2 border rounded-lg ${errors.fullName ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              value={formData.fullName}
+              onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+              placeholder="John Doe"
+            />
+            {errors.fullName && (
+              <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
             <input
               type="email"
-              className="w-full px-4 py-2 bg-white/10 text-white border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-              placeholder="Your email"
+              className={`w-full px-3 py-2 border rounded-lg ${errors.email ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              value={formData.email}
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              placeholder="john@example.com"
             />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+            )}
           </div>
 
-          {/* Password */}
           <div>
-            <label className="block text-white mb-2">Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
             <input
               type="password"
-              className="w-full px-4 py-2 bg-white/10 text-white border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-              placeholder="Your password"
+              className={`w-full px-3 py-2 border rounded-lg ${errors.password ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              value={formData.password}
+              onChange={(e) => setFormData({...formData, password: e.target.value})}
+              placeholder="••••••••"
             />
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+            )}
           </div>
 
-          {/* Employee Fields */}
-          {role === "employee" && (
-            <>
-              <div>
-                <label className="block text-white mb-2">Employee ID</label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2 bg-white/10 text-white border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                  placeholder="e.g. EMP1234"
-                />
-              </div>
-              <div>
-                <label className="block text-white mb-2">Department</label>
-                <select className="w-full px-4 py-2 bg-white/10 text-white border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400">
-                  <option className="text-black">Engineering</option>
-                  <option className="text-black">HR</option>
-                  <option className="text-black">Marketing</option>
-                  <option className="text-black">Finance</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-white mb-2">Role</label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2 bg-white/10 text-white border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                  placeholder="e.g. Software Engineer"
-                />
-              </div>
-            </>
-          )}
-
-          {/* Admin Fields */}
-          {role === "admin" && (
-            <>
-              <div>
-                <label className="block text-white mb-2">Admin Code</label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2 bg-white/10 text-white border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
-                  placeholder="Enter admin code"
-                />
-              </div>
-              <div>
-                <label className="block text-white mb-2">Access Level</label>
-                <select className="w-full px-4 py-2 bg-white/10 text-white border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400">
-                  <option className="text-black">Super Admin</option>
-                  <option className="text-black">Manager</option>
-                  <option className="text-black">Support</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-white mb-2">Phone Number</label>
-                <input
-                  type="tel"
-                  className="w-full px-4 py-2 bg-white/10 text-white border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
-                  placeholder="e.g. +880 123 456 789"
-                />
-              </div>
-            </>
-          )}
-
-          {/* HR Fields */}
-          {role === "hr" && (
-            <>
-              <div>
-                <label className="block text-white mb-2">HR ID</label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2 bg-white/10 text-white border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-                  placeholder="e.g. HR9876"
-                />
-              </div>
-              <div>
-                <label className="block text-white mb-2">Department Managed</label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2 bg-white/10 text-white border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-                  placeholder="e.g. Engineering, Marketing"
-                />
-              </div>
-              <div>
-                <label className="block text-white mb-2">Years of Experience</label>
-                <input
-                  type="number"
-                  className="w-full px-4 py-2 bg-white/10 text-white border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-                  placeholder="e.g. 5"
-                />
-              </div>
-            </>
-          )}
-
-          {/* Submit */}
           <button
             type="submit"
-            className="w-full py-3 bg-gradient-to-r from-green-400 to-cyan-500 rounded-lg text-white font-semibold hover:opacity-90 transition"
+            disabled={isSubmitting}
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-300"
           >
-            Register
+            {isSubmitting ? 'Registering...' : 'Create Account'}
           </button>
         </form>
-
-        <p className="mt-6 text-center text-white/80">
-          Already have an account?{" "}
-          <Link href="/login" className="text-cyan-300 hover:underline">
-            Login
-          </Link>
-        </p>
       </div>
     </div>
   );
